@@ -1,0 +1,61 @@
+# start with:
+# source ~/.tmux.solr.session
+#
+# notes:
+# http://superuser.com/questions/440015/restore-tmux-session-after-reboot
+# http://www.unwiredcouch.com/2013/11/15/my-tmux-setup.html
+# https://gist.github.com/MohamedAlaa/2961058
+
+SESSION=solr
+tmux has-session -t $SESSION 
+if [ $? != 0 ]
+then
+
+#expect solr home dir set
+if [ -z "$SOLR_HOME" ]; then
+    echo "Need to set SOLR_HOME"
+    exit 1
+fi  
+
+#open session with win0: console (use my conf)
+# tmux -f path/to/.tmux.conf new-session -s $SESSION -n console -d
+tmux -f ~/.tmux.conf new-session -s $SESSION -n console -d
+
+#setup console win
+tmux split-window -v 
+tmux select-pane -t 0
+tmux send-keys 'cd $SOLR_HOME/multicore/core0/conf' C-m
+tmux send-keys "curl 'http://127.0.0.1:8983/solr/core0/select/?q=*%3A*&rows=2'" C-m
+#logs
+tmux select-pane -t 1
+tmux send-keys 'cd $SOLR_HOME/logs' C-m
+#top
+tmux split-window -h 
+tmux select-pane -t 2
+tmux send-keys 'top' C-m
+
+#win1: mysq & tail log
+tmux new-window -n mysql-log 
+tmux select-window -t 1
+tmux split-window -v 
+tmux select-pane -t 0
+#connect to mysql server
+tmux send-keys 'mysql' C-m
+tmux select-pane -t 1
+tmux send-keys 'cd $SOLR_HOME/logs' C-m
+tmux send-keys 'tail -f solr0-0.log' C-m
+
+#win2: vim
+tmux new-window -n vim
+tmux select-window -t 2
+tmux split-window -v 
+tmux select-pane -t 0
+tmux send-keys 'vim $SOLR_HOME/multicore/core0/conf' C-m
+tmux select-pane -t 1
+tmux send-keys 'vim $SOLR_HOME/yajsw/conf' C-m
+
+# Set default window
+tmux select-window -t $SESSION:0
+
+fi
+tmux attach -t $SESSION 
