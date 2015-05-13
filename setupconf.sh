@@ -1,4 +1,7 @@
 # 
+apt-get update
+apt-get install curl git xsel
+
 cd ~
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 wget https://raw.githubusercontent.com/jmlucjav/tmuxconf/master/.tmux.conf 
